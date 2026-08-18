@@ -1012,6 +1012,9 @@ function cacheDom() {
     DOM.btnBackStart = document.getElementById("btn-back-start");
     DOM.btnStartGame = document.getElementById("btn-start-game");
 
+    DOM.btnRules = document.getElementById("btn-rules");
+    DOM.rulesModal = document.getElementById("rules-modal");
+   
     DOM.playerCount = document.getElementById("player-count");
     DOM.playerInputs = document.getElementById("player-inputs");
 
@@ -1162,6 +1165,8 @@ function bindEvents() {
         finishWildcard
     );
 
+   DOM.btnRules.addEventListener("click", openRules);
+   
     DOM.btnNewGame.addEventListener("click", () => {
         resetGame();
         setupPlayerInputs();
@@ -1192,6 +1197,14 @@ function showScreen(screenName) {
     if (screens[screenName]) {
         screens[screenName].classList.add("active");
     }
+}
+
+function openRules() {
+    DOM.rulesModal.classList.remove("hidden");
+}
+
+function closeRules() {
+    DOM.rulesModal.classList.add("hidden");
 }
 
 /* =========================================================
