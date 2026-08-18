@@ -36,7 +36,15 @@
                     <div><strong>🏆</strong><span>Acumula puntos</span></div>
                 </div>
 
-                <button id="btn-start" class="primary-btn">JUGAR</button>
+                <div class="start-buttons">
+    <button id="btn-start" class="primary-btn">
+        JUGAR
+    </button>
+
+    <button id="btn-rules" class="secondary-btn">
+        📖 REGLAS DEL JUEGO
+    </button>
+</div>
             </div>
         </section>
 
@@ -235,6 +243,68 @@
             </div>
         </section>
 
+<!-- ==================== MODAL REGLAS ==================== -->
+
+<div id="rules-modal" class="modal hidden">
+    <div class="modal-card rules-card">
+
+        <h2>📖 REGLAS DEL JUEGO</h2>
+
+        <h3>🎯 Objetivo</h3>
+
+        <p>
+            Obtener la mayor cantidad de puntos algebraicos y llegar a la META.
+        </p>
+
+        <h3>🎲 Cómo jugar</h3>
+
+        <ul>
+            <li>Cada jugador lanza el dado.</li>
+            <li>El número obtenido indica las casillas que avanzará.</li>
+            <li>Cada casilla contiene un reto matemático.</li>
+            <li>Las respuestas correctas otorgan puntos.</li>
+            <li>Las respuestas incorrectas restan puntos.</li>
+            <li>Todos los jugadores deben completar la ronda.</li>
+        </ul>
+
+        <h3>🧩 Casillas del tablero</h3>
+
+        <ul>
+            <li>🧠 Identifica: +1 punto.</li>
+            <li>➕ Suma: +1 punto.</li>
+            <li>➖ Resta: +1 punto.</li>
+            <li>✖️ Multiplicación: +1 punto y una casilla adicional.</li>
+            <li>➗ División: +2 puntos.</li>
+            <li>🔄 Sustituye y compara: +2 puntos.</li>
+            <li>⭐ Desafío: +3 puntos.</li>
+            <li>🃏 Comodín: acción aleatoria.</li>
+        </ul>
+
+        <h3>🃏 Comodines</h3>
+
+        <ul>
+            <li>Avanzar dos casillas.</li>
+            <li>Retroceder una casilla.</li>
+            <li>Ganar dos puntos.</li>
+            <li>Perder un punto.</li>
+            <li>Intercambiar posiciones.</li>
+            <li>Repetir el turno.</li>
+        </ul>
+
+        <h3>🏆 Cómo se gana</h3>
+
+        <p>
+            El ganador será el jugador que tenga la mayor cantidad de puntos
+            cuando todos los participantes hayan completado la ronda.
+        </p>
+
+        <button id="btn-close-rules" class="primary-btn">
+            CERRAR
+        </button>
+
+    </div>
+</div>
+        
         <!-- ==================== MODAL COMODÍN ==================== -->
         <div id="wildcard-modal" class="modal hidden">
             <div class="modal-card">
