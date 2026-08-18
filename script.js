@@ -909,25 +909,24 @@ questionBank[questionBank.length - 1].explanation =
 let players = [];
 let currentPlayerIndex = 0;
 let round = 1;
+
 let selectedAnswer = null;
 let currentQuestion = null;
 let currentCellType = null;
 let pendingAction = null;
+
 let lastQuestionIndex = -1;
 let roundTurns = 0;
 let gameFinished = false;
+let turnLocked = false;
 
 /*
-   Las 40 casillas reales se organizan en cinco filas:
-   fila 0: SALIDA, 1...8
-   fila 1: 17...9
-   fila 2: 18...26
-   fila 3: 35...27
-   fila 4: 36...39, META
+   TABLERO
 
-   Las casillas 1-39 tienen recorrido serpenteante.
-   SALIDA = posición 0.
-   META = posición 40.
+   Posición 0 = SALIDA
+   Posición 40 = META
+
+   El recorrido tiene 41 posiciones.
 */
 
 const boardPositions = [
@@ -991,7 +990,16 @@ document.addEventListener("DOMContentLoaded", () => {
     setupPlayerInputs();
     bindEvents();
     renderBoard();
+
+    /*
+       El botón Continuar debe comenzar deshabilitado.
+    */
+    DOM.btnContinue.disabled = true;
 });
+
+/* =========================================================
+   DOM
+   ========================================================= */
 
 function cacheDom() {
     DOM.startScreen = document.getElementById("screen-start");
@@ -1003,72 +1011,156 @@ function cacheDom() {
     DOM.btnStart = document.getElementById("btn-start");
     DOM.btnBackStart = document.getElementById("btn-back-start");
     DOM.btnStartGame = document.getElementById("btn-start-game");
+
     DOM.playerCount = document.getElementById("player-count");
     DOM.playerInputs = document.getElementById("player-inputs");
 
     DOM.board = document.getElementById("board");
+
     DOM.roundNumber = document.getElementById("round-number");
     DOM.currentPlayerName = document.getElementById("current-player-name");
     DOM.currentPlayerScore = document.getElementById("current-player-score");
+
     DOM.progressFill = document.getElementById("progress-fill");
     DOM.progressText = document.getElementById("progress-text");
 
     DOM.sidebarPlayerName = document.getElementById("sidebar-player-name");
-    DOM.sidebarPlayerPosition = document.getElementById("sidebar-player-position");
-    DOM.turnPlayerColor = document.getElementById("turn-player-color");
+    DOM.sidebarPlayerPosition =
+        document.getElementById("sidebar-player-position");
+
+    DOM.turnPlayerColor =
+        document.getElementById("turn-player-color");
+
     DOM.scoreboard = document.getElementById("scoreboard");
 
     DOM.dice = document.getElementById("dice");
     DOM.diceMessage = document.getElementById("dice-message");
     DOM.btnRoll = document.getElementById("btn-roll");
 
-    DOM.challengeCategory = document.getElementById("challenge-category");
-    DOM.challengeDifficulty = document.getElementById("challenge-difficulty");
-    DOM.challengePoints = document.getElementById("challenge-points");
-    DOM.challengeQuestion = document.getElementById("challenge-question");
-    DOM.answerOptions = document.getElementById("answer-options");
-    DOM.btnCheck = document.getElementById("btn-check");
-    DOM.challengeResult = document.getElementById("challenge-result");
-    DOM.resultIcon = document.getElementById("result-icon");
-    DOM.resultTitle = document.getElementById("result-title");
-    DOM.resultAnswer = document.getElementById("result-answer");
-    DOM.resultExplanation = document.getElementById("result-explanation");
-    DOM.resultPoints = document.getElementById("result-points");
-    DOM.btnContinue = document.getElementById("btn-continue");
-    DOM.btnCancelChallenge = document.getElementById("btn-cancel-challenge");
+    DOM.challengeCategory =
+        document.getElementById("challenge-category");
 
-    DOM.wildcardModal = document.getElementById("wildcard-modal");
-    DOM.wildcardText = document.getElementById("wildcard-text");
-    DOM.btnWildcardContinue = document.getElementById("btn-wildcard-continue");
+    DOM.challengeDifficulty =
+        document.getElementById("challenge-difficulty");
 
-    DOM.winnerName = document.getElementById("winner-name");
-    DOM.winnerScore = document.getElementById("winner-score");
-    DOM.winnerPosition = document.getElementById("winner-position");
-    DOM.finalRounds = document.getElementById("final-rounds");
-    DOM.winnerColor = document.getElementById("winner-color");
-    DOM.finishMessage = document.getElementById("finish-message");
-    DOM.btnNewGame = document.getElementById("btn-new-game");
+    DOM.challengePoints =
+        document.getElementById("challenge-points");
 
-    DOM.toast = document.getElementById("toast");
+    DOM.challengeQuestion =
+        document.getElementById("challenge-question");
+
+    DOM.answerOptions =
+        document.getElementById("answer-options");
+
+    DOM.btnCheck =
+        document.getElementById("btn-check");
+
+    DOM.challengeResult =
+        document.getElementById("challenge-result");
+
+    DOM.resultIcon =
+        document.getElementById("result-icon");
+
+    DOM.resultTitle =
+        document.getElementById("result-title");
+
+    DOM.resultAnswer =
+        document.getElementById("result-answer");
+
+    DOM.resultExplanation =
+        document.getElementById("result-explanation");
+
+    DOM.resultPoints =
+        document.getElementById("result-points");
+
+    DOM.btnContinue =
+        document.getElementById("btn-continue");
+
+    DOM.btnCancelChallenge =
+        document.getElementById("btn-cancel-challenge");
+
+    DOM.wildcardModal =
+        document.getElementById("wildcard-modal");
+
+    DOM.wildcardText =
+        document.getElementById("wildcard-text");
+
+    DOM.btnWildcardContinue =
+        document.getElementById("btn-wildcard-continue");
+
+    DOM.winnerName =
+        document.getElementById("winner-name");
+
+    DOM.winnerScore =
+        document.getElementById("winner-score");
+
+    DOM.winnerPosition =
+        document.getElementById("winner-position");
+
+    DOM.finalRounds =
+        document.getElementById("final-rounds");
+
+    DOM.winnerColor =
+        document.getElementById("winner-color");
+
+    DOM.finishMessage =
+        document.getElementById("finish-message");
+
+    DOM.btnNewGame =
+        document.getElementById("btn-new-game");
+
+    DOM.toast =
+        document.getElementById("toast");
 }
 
+/* =========================================================
+   EVENTOS
+   ========================================================= */
+
 function bindEvents() {
-    DOM.btnStart.addEventListener("click", () => showScreen("setup"));
-    DOM.btnBackStart.addEventListener("click", () => showScreen("start"));
 
-    DOM.playerCount.addEventListener("change", setupPlayerInputs);
+    DOM.btnStart.addEventListener("click", () => {
+        showScreen("setup");
+    });
 
-    DOM.btnStartGame.addEventListener("click", startGame);
+    DOM.btnBackStart.addEventListener("click", () => {
+        showScreen("start");
+    });
 
-    DOM.btnRoll.addEventListener("click", rollDice);
+    DOM.playerCount.addEventListener(
+        "change",
+        setupPlayerInputs
+    );
 
-    DOM.btnCheck.addEventListener("click", checkAnswer);
+    DOM.btnStartGame.addEventListener(
+        "click",
+        startGame
+    );
 
-    DOM.btnContinue.addEventListener("click", continueAfterChallenge);
+    DOM.btnRoll.addEventListener(
+        "click",
+        rollDice
+    );
 
-    DOM.btnCancelChallenge.addEventListener("click", cancelChallenge);
+    DOM.btnCheck.addEventListener(
+        "click",
+        checkAnswer
+    );
 
-    DOM.btnWildcardContinue.addEventListener("click", finishWildcard);
+    DOM.btnContinue.addEventListener(
+        "click",
+        continueAfterChallenge
+    );
+
+    DOM.btnCancelChallenge.addEventListener(
+        "click",
+        cancelChallenge
+    );
+
+    DOM.btnWildcardContinue.addEventListener(
+        "click",
+        finishWildcard
+    );
 
     DOM.btnNewGame.addEventListener("click", () => {
         resetGame();
@@ -1082,6 +1174,7 @@ function bindEvents() {
    ========================================================= */
 
 function showScreen(screenName) {
+
     const screens = {
         start: DOM.startScreen,
         setup: DOM.setupScreen,
@@ -1091,21 +1184,28 @@ function showScreen(screenName) {
     };
 
     Object.values(screens).forEach(screen => {
-        screen.classList.remove("active");
+        if (screen) {
+            screen.classList.remove("active");
+        }
     });
 
-    screens[screenName].classList.add("active");
+    if (screens[screenName]) {
+        screens[screenName].classList.add("active");
+    }
 }
 
 /* =========================================================
-   CONFIGURACIÓN DE JUGADORES
+   JUGADORES
    ========================================================= */
 
 function setupPlayerInputs() {
+
     const count = Number(DOM.playerCount.value);
+
     DOM.playerInputs.innerHTML = "";
 
     for (let i = 0; i < count; i++) {
+
         const wrapper = document.createElement("div");
         wrapper.className = "player-input";
 
@@ -1120,9 +1220,12 @@ function setupPlayerInputs() {
         label.textContent = `JUGADOR ${i + 1}`;
 
         const input = document.createElement("input");
+
         input.type = "text";
         input.maxLength = 18;
-        input.placeholder = `Nombre del jugador ${i + 1}`;
+        input.placeholder =
+            `Nombre del jugador ${i + 1}`;
+
         input.dataset.playerIndex = String(i);
 
         labelWrap.appendChild(label);
@@ -1135,14 +1238,22 @@ function setupPlayerInputs() {
     }
 }
 
+/* =========================================================
+   INICIAR PARTIDA
+   ========================================================= */
+
 function startGame() {
-    const inputs = Array.from(
-        DOM.playerInputs.querySelectorAll("input")
-    );
+
+    const inputs =
+        Array.from(
+            DOM.playerInputs.querySelectorAll("input")
+        );
 
     players = inputs.map((input, index) => ({
         id: index,
-        name: input.value.trim() || `Jugador ${index + 1}`,
+        name:
+            input.value.trim() ||
+            `Jugador ${index + 1}`,
         color: PLAYER_COLORS[index],
         position: 0,
         score: 0,
@@ -1153,18 +1264,26 @@ function startGame() {
     currentPlayerIndex = 0;
     round = 1;
     roundTurns = 0;
+
     gameFinished = false;
+    turnLocked = false;
+
     selectedAnswer = null;
     currentQuestion = null;
+    currentCellType = null;
     pendingAction = null;
+
     lastQuestionIndex = -1;
 
     DOM.dice.textContent = "?";
     DOM.diceMessage.textContent = "Pulsa para lanzar";
     DOM.btnRoll.disabled = false;
 
+    DOM.btnContinue.disabled = true;
+
     renderBoard();
     updateGameUI();
+
     showScreen("game");
 
     announce(
@@ -1177,28 +1296,26 @@ function startGame() {
    ========================================================= */
 
 function renderBoard() {
+
     DOM.board.innerHTML = "";
 
     const visualCells = [];
 
-    /*
-       Fila 1: posiciones 0 a 8
-       Fila 2: posiciones 9 a 17 invertidas
-       Fila 3: posiciones 18 a 26
-       Fila 4: posiciones 27 a 35 invertidas
-       Fila 5: posiciones 36 a 40
-    */
-
     for (let row = 0; row < 5; row++) {
-        const start = row === 0 ? 0 :
+
+        const start =
+            row === 0 ? 0 :
             row === 1 ? 9 :
             row === 2 ? 18 :
-            row === 3 ? 27 : 36;
+            row === 3 ? 27 :
+            36;
 
-        const end = row === 0 ? 8 :
+        const end =
+            row === 0 ? 8 :
             row === 1 ? 17 :
             row === 2 ? 26 :
-            row === 3 ? 35 : 40;
+            row === 3 ? 35 :
+            40;
 
         const positions = [];
 
@@ -1211,37 +1328,52 @@ function renderBoard() {
         }
 
         while (positions.length < 9) {
-            if (row === 4) {
-                positions.push(null);
-            } else {
-                positions.push(null);
-            }
+            positions.push(null);
         }
 
         positions.forEach(position => {
-            const cell = document.createElement("div");
+
+            const cell =
+                document.createElement("div");
 
             if (position === null) {
-                cell.className = "board-cell empty";
+                cell.className =
+                    "board-cell empty";
+
                 visualCells.push(cell);
                 return;
             }
 
-            const data = boardPositions[position];
+            const data =
+                boardPositions[position];
 
             cell.className = "board-cell";
 
             if (position === 0) {
-                cell.classList.add("cell-start");
+
+                cell.classList.add(
+                    "cell-start"
+                );
+
             } else if (position === 40) {
-                cell.classList.add("cell-meta");
+
+                cell.classList.add(
+                    "cell-meta"
+                );
+
             } else {
-                cell.classList.add(TYPE_INFO[data.type].css);
+
+                cell.classList.add(
+                    TYPE_INFO[data.type].css
+                );
             }
 
-            cell.dataset.position = String(position);
+            cell.dataset.position =
+                String(position);
 
-            const number = document.createElement("div");
+            const number =
+                document.createElement("div");
+
             number.className = "cell-number";
 
             if (position === 0) {
@@ -1252,17 +1384,26 @@ function renderBoard() {
                 number.textContent = position;
             }
 
-            const icon = document.createElement("div");
+            const icon =
+                document.createElement("div");
+
             icon.className = "cell-icon";
             icon.textContent = data.icon;
 
-            const name = document.createElement("div");
+            const name =
+                document.createElement("div");
+
             name.className = "cell-name";
             name.textContent = data.label;
 
-            const fichaContainer = document.createElement("div");
-            fichaContainer.className = "ficha-container";
-            fichaContainer.id = `fichas-${position}`;
+            const fichaContainer =
+                document.createElement("div");
+
+            fichaContainer.className =
+                "ficha-container";
+
+            fichaContainer.id =
+                `fichas-${position}`;
 
             cell.appendChild(number);
             cell.appendChild(icon);
@@ -1273,7 +1414,9 @@ function renderBoard() {
         });
     }
 
-    visualCells.forEach(cell => DOM.board.appendChild(cell));
+    visualCells.forEach(cell => {
+        DOM.board.appendChild(cell);
+    });
 
     updatePieces();
 }
@@ -1283,25 +1426,36 @@ function renderBoard() {
    ========================================================= */
 
 function updatePieces() {
-    document.querySelectorAll(".ficha-container").forEach(container => {
-        container.innerHTML = "";
-    });
+
+    document
+        .querySelectorAll(".ficha-container")
+        .forEach(container => {
+            container.innerHTML = "";
+        });
 
     players.forEach((player, index) => {
-        const container = document.getElementById(`fichas-${player.position}`);
+
+        const container =
+            document.getElementById(
+                `fichas-${player.position}`
+            );
 
         if (!container) {
             return;
         }
 
-        const ficha = document.createElement("span");
+        const ficha =
+            document.createElement("span");
+
         ficha.className = "ficha";
 
         if (index === currentPlayerIndex) {
             ficha.classList.add("current");
         }
 
-        ficha.style.backgroundColor = player.color;
+        ficha.style.backgroundColor =
+            player.color;
+
         ficha.title = player.name;
 
         container.appendChild(ficha);
@@ -1309,63 +1463,102 @@ function updatePieces() {
 }
 
 /* =========================================================
-   INTERFAZ DEL JUEGO
+   INTERFAZ
    ========================================================= */
 
 function updateGameUI() {
+
     if (!players.length) {
         return;
     }
 
-    const current = players[currentPlayerIndex];
+    const current =
+        players[currentPlayerIndex];
 
     DOM.roundNumber.textContent = round;
-    DOM.currentPlayerName.textContent = current.name;
-    DOM.currentPlayerScore.textContent = current.score;
 
-    DOM.sidebarPlayerName.textContent = current.name;
-    DOM.sidebarPlayerPosition.textContent = getPositionLabel(current.position);
-    DOM.turnPlayerColor.style.backgroundColor = current.color;
+    DOM.currentPlayerName.textContent =
+        current.name;
 
-    const progress = Math.round((current.position / 40) * 100);
-    DOM.progressFill.style.width = `${progress}%`;
+    DOM.currentPlayerScore.textContent =
+        current.score;
+
+    DOM.sidebarPlayerName.textContent =
+        current.name;
+
+    DOM.sidebarPlayerPosition.textContent =
+        getPositionLabel(current.position);
+
+    DOM.turnPlayerColor.style.backgroundColor =
+        current.color;
+
+    const progress =
+        Math.round(
+            (current.position / 40) * 100
+        );
+
+    DOM.progressFill.style.width =
+        `${progress}%`;
+
     DOM.progressText.textContent =
-        current.position === 40 ? "META" : `${current.position}/40`;
+        current.position === 40
+            ? "META"
+            : `${current.position}/40`;
 
     updateScoreboard();
     updatePieces();
 }
 
+/* =========================================================
+   MARCADOR
+   ========================================================= */
+
 function updateScoreboard() {
+
     DOM.scoreboard.innerHTML = "";
 
-    const ranking = [...players].sort((a, b) => {
-        if (b.score !== a.score) {
-            return b.score - a.score;
-        }
+    const ranking =
+        [...players].sort((a, b) => {
 
-        return b.position - a.position;
-    });
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
 
-    ranking.forEach((player, rankingIndex) => {
-        const row = document.createElement("div");
+            return b.position - a.position;
+        });
+
+    ranking.forEach(player => {
+
+        const row =
+            document.createElement("div");
+
         row.className = "score-row";
 
         if (player.id === currentPlayerIndex) {
             row.classList.add("active");
         }
 
-        const dot = document.createElement("span");
+        const dot =
+            document.createElement("span");
+
         dot.className = "score-dot";
-        dot.style.backgroundColor = player.color;
+        dot.style.backgroundColor =
+            player.color;
 
-        const nameWrap = document.createElement("div");
+        const nameWrap =
+            document.createElement("div");
 
-        const name = document.createElement("div");
+        const name =
+            document.createElement("div");
+
         name.textContent = player.name;
 
-        const position = document.createElement("div");
-        position.className = "score-position";
+        const position =
+            document.createElement("div");
+
+        position.className =
+            "score-position";
+
         position.textContent =
             player.position === 40
                 ? "META"
@@ -1374,9 +1567,14 @@ function updateScoreboard() {
         nameWrap.appendChild(name);
         nameWrap.appendChild(position);
 
-        const points = document.createElement("span");
-        points.className = "score-points";
-        points.textContent = `${player.score} pts`;
+        const points =
+            document.createElement("span");
+
+        points.className =
+            "score-points";
+
+        points.textContent =
+            `${player.score} pts`;
 
         row.appendChild(dot);
         row.appendChild(nameWrap);
@@ -1387,6 +1585,7 @@ function updateScoreboard() {
 }
 
 function getPositionLabel(position) {
+
     if (position === 0) {
         return "Salida";
     }
@@ -1403,35 +1602,62 @@ function getPositionLabel(position) {
    ========================================================= */
 
 function rollDice() {
-    if (DOM.btnRoll.disabled || gameFinished) {
+
+    if (
+        DOM.btnRoll.disabled ||
+        gameFinished ||
+        turnLocked
+    ) {
         return;
     }
 
+    turnLocked = true;
+
     DOM.btnRoll.disabled = true;
+
     DOM.dice.classList.add("rolling");
     DOM.diceMessage.textContent = "Lanzando...";
 
     let animationCount = 0;
 
-    const interval = setInterval(() => {
-        const temporaryValue = Math.floor(Math.random() * 6) + 1;
-        DOM.dice.textContent = temporaryValue;
-        animationCount++;
+    const interval =
+        setInterval(() => {
 
-        if (animationCount >= 7) {
-            clearInterval(interval);
+            const temporaryValue =
+                Math.floor(
+                    Math.random() * 6
+                ) + 1;
 
-            const result = Math.floor(Math.random() * 6) + 1;
+            DOM.dice.textContent =
+                temporaryValue;
 
-            DOM.dice.textContent = result;
-            DOM.dice.classList.remove("rolling");
-            DOM.diceMessage.textContent = `${players[currentPlayerIndex].name} obtuvo ${result}`;
+            animationCount++;
 
-            setTimeout(() => {
-                moveCurrentPlayer(result);
-            }, 500);
-        }
-    }, 90);
+            if (animationCount >= 7) {
+
+                clearInterval(interval);
+
+                const result =
+                    Math.floor(
+                        Math.random() * 6
+                    ) + 1;
+
+                DOM.dice.textContent =
+                    result;
+
+                DOM.dice.classList.remove(
+                    "rolling"
+                );
+
+                DOM.diceMessage.textContent =
+                    `${players[currentPlayerIndex].name} obtuvo ${result}`;
+
+                setTimeout(() => {
+                    moveCurrentPlayer(result);
+                }, 500);
+            }
+
+        }, 90);
 }
 
 /* =========================================================
@@ -1439,19 +1665,33 @@ function rollDice() {
    ========================================================= */
 
 function moveCurrentPlayer(steps) {
-    const player = players[currentPlayerIndex];
 
-    const oldPosition = player.position;
-    const newPosition = Math.min(40, oldPosition + steps);
+    const player =
+        players[currentPlayerIndex];
+
+    const oldPosition =
+        player.position;
+
+    const newPosition =
+        Math.min(
+            40,
+            oldPosition + steps
+        );
 
     player.position = newPosition;
     player.lastMove = steps;
+
+    if (newPosition === 40) {
+        player.reachedMeta = true;
+    }
 
     updateGameUI();
 
     const movementMessage =
         newPosition === 40
-            ? `${player.name} llegó a META. ¡Ahora debe esperar el resultado final!`
+
+            ? `${player.name} llegó a META. Ahora necesita al menos 5 puntos algebraicos para poder ganar.`
+
             : `${player.name} avanzó ${steps} casilla${steps === 1 ? "" : "s"}.`;
 
     announce(movementMessage);
@@ -1461,19 +1701,31 @@ function moveCurrentPlayer(steps) {
     }, 650);
 }
 
+/* =========================================================
+   CASILLA
+   ========================================================= */
+
 function handleLandingCell() {
-    const player = players[currentPlayerIndex];
-    const cell = boardPositions[player.position];
+
+    const player =
+        players[currentPlayerIndex];
+
+    const cell =
+        boardPositions[player.position];
 
     if (player.position === 40) {
+
         finishTurnWithoutChallenge();
+
         return;
     }
 
     currentCellType = cell.type;
 
     if (cell.type === "comodin") {
+
         executeWildcard();
+
         return;
     }
 
@@ -1481,75 +1733,110 @@ function handleLandingCell() {
 }
 
 /* =========================================================
-   RETOS
+   PREGUNTAS
    ========================================================= */
 
 function getQuestionsByType(type) {
+
     if (type === "identifica") {
-        return questionBank.filter(q => q.category === "identifica");
+        return questionBank.filter(
+            q => q.category === "identifica"
+        );
     }
 
     if (type === "suma") {
-        return questionBank.filter(q =>
-            q.question.toLowerCase().includes("suma") ||
-            q.category === "suma"
+        return questionBank.filter(
+            q => q.category === "suma"
         );
     }
 
     if (type === "resta") {
-        return questionBank.filter(q => q.category === "resta");
+        return questionBank.filter(
+            q => q.category === "resta"
+        );
     }
 
     if (type === "multiplicacion") {
-        return questionBank.filter(q => q.category === "multiplicacion");
+        return questionBank.filter(
+            q => q.category === "multiplicacion"
+        );
     }
 
     if (type === "division") {
-        return questionBank.filter(q => q.category === "division");
+        return questionBank.filter(
+            q => q.category === "division"
+        );
     }
 
     if (type === "sustituye") {
-        return questionBank.filter(q => q.category === "sustituye");
+        return questionBank.filter(
+            q => q.category === "sustituye"
+        );
     }
 
     if (type === "desafio") {
-        return questionBank.filter(q => q.category === "desafio");
+        return questionBank.filter(
+            q => q.category === "desafio"
+        );
     }
 
     return questionBank;
 }
 
 function chooseQuestion(type) {
-    let pool = getQuestionsByType(type);
+
+    let pool =
+        getQuestionsByType(type);
 
     if (!pool.length) {
         pool = questionBank;
     }
 
-    let candidates = pool.filter(q => {
-        const globalIndex = questionBank.indexOf(q);
-        return globalIndex !== lastQuestionIndex;
-    });
+    let candidates =
+        pool.filter(q => {
+
+            const globalIndex =
+                questionBank.indexOf(q);
+
+            return globalIndex !==
+                lastQuestionIndex;
+        });
 
     if (!candidates.length) {
         candidates = pool;
     }
 
     const selected =
-        candidates[Math.floor(Math.random() * candidates.length)];
+        candidates[
+            Math.floor(
+                Math.random() *
+                candidates.length
+            )
+        ];
 
-    lastQuestionIndex = questionBank.indexOf(selected);
+    lastQuestionIndex =
+        questionBank.indexOf(selected);
 
     return selected;
 }
 
+/* =========================================================
+   ABRIR RETO
+   ========================================================= */
+
 function openChallenge(type) {
-    currentQuestion = chooseQuestion(type);
+
+    currentQuestion =
+        chooseQuestion(type);
+
     selectedAnswer = null;
 
-    const info = TYPE_INFO[type];
+    const info =
+        TYPE_INFO[type];
 
-    DOM.challengeCategory.textContent = info.name.toUpperCase();
+    DOM.challengeCategory.textContent =
+        info.name.toUpperCase();
+
     DOM.challengeDifficulty.textContent =
         currentQuestion.difficulty.toUpperCase();
 
@@ -1558,84 +1845,176 @@ function openChallenge(type) {
             ? `+${info.pointsCorrect}`
             : "0";
 
-    DOM.challengeQuestion.textContent = currentQuestion.question;
+    DOM.challengeQuestion.textContent =
+        currentQuestion.question;
 
     DOM.answerOptions.innerHTML = "";
 
-    currentQuestion.options.forEach((option, index) => {
-        const button = document.createElement("button");
-        button.className = "answer-option";
-        button.type = "button";
-        button.dataset.value = option;
+    currentQuestion.options.forEach(
+        (option, index) => {
 
-        const letter = document.createElement("span");
-        letter.className = "answer-letter";
-        letter.textContent = String.fromCharCode(65 + index);
+            const button =
+                document.createElement("button");
 
-        const text = document.createElement("span");
-        text.textContent = option;
+            button.className =
+                "answer-option";
 
-        button.appendChild(letter);
-        button.appendChild(text);
+            button.type = "button";
 
-        button.addEventListener("click", () => {
-            selectAnswer(button, option);
-        });
+            button.dataset.value =
+                option;
 
-        DOM.answerOptions.appendChild(button);
-    });
+            const letter =
+                document.createElement("span");
 
-    DOM.challengeResult.className = "challenge-result hidden";
+            letter.className =
+                "answer-letter";
+
+            letter.textContent =
+                String.fromCharCode(
+                    65 + index
+                );
+
+            const text =
+                document.createElement("span");
+
+            text.textContent = option;
+
+            button.appendChild(letter);
+            button.appendChild(text);
+
+            button.addEventListener(
+                "click",
+                () => {
+                    selectAnswer(
+                        button,
+                        option
+                    );
+                }
+            );
+
+            DOM.answerOptions.appendChild(
+                button
+            );
+        }
+    );
+
+    DOM.challengeResult.className =
+        "challenge-result hidden";
+
     DOM.resultTitle.textContent = "";
     DOM.resultAnswer.textContent = "";
     DOM.resultExplanation.textContent = "";
     DOM.resultPoints.textContent = "";
+
+    /*
+       IMPORTANTE:
+       al abrir una pregunta se puede comprobar,
+       pero todavía NO se puede continuar.
+    */
+
     DOM.btnCheck.disabled = false;
+    DOM.btnContinue.disabled = true;
 
     showScreen("challenge");
 }
 
+/* =========================================================
+   SELECCIONAR RESPUESTA
+   ========================================================= */
+
 function selectAnswer(button, value) {
+
     if (DOM.btnCheck.disabled) {
         return;
     }
 
-    document.querySelectorAll(".answer-option").forEach(option => {
-        option.classList.remove("selected");
-    });
+    document
+        .querySelectorAll(".answer-option")
+        .forEach(option => {
+            option.classList.remove(
+                "selected"
+            );
+        });
 
     button.classList.add("selected");
+
     selectedAnswer = value;
 }
 
+/* =========================================================
+   COMPROBAR RESPUESTA
+   ========================================================= */
+
 function checkAnswer() {
+
     if (selectedAnswer === null) {
-        announce("Selecciona una respuesta antes de comprobar.");
+
+        announce(
+            "Selecciona una respuesta antes de comprobar."
+        );
+
+        return;
+    }
+
+    /*
+       Evita comprobar dos veces.
+    */
+
+    if (DOM.btnCheck.disabled) {
         return;
     }
 
     DOM.btnCheck.disabled = true;
 
-    const player = players[currentPlayerIndex];
-    const info = TYPE_INFO[currentCellType];
+    /*
+       AQUÍ ESTABA EL PROBLEMA PRINCIPAL.
 
-    const correct = selectedAnswer === currentQuestion.answer;
+       Después de comprobar, habilitamos CONTINUAR.
+    */
+
+    DOM.btnContinue.disabled = false;
+
+    const player =
+        players[currentPlayerIndex];
+
+    const info =
+        TYPE_INFO[currentCellType];
+
+    const correct =
+        selectedAnswer ===
+        currentQuestion.answer;
 
     let pointsChange = 0;
 
     if (correct) {
-        pointsChange = info.pointsCorrect;
+        pointsChange =
+            info.pointsCorrect;
     } else {
-        pointsChange = info.pointsWrong;
+        pointsChange =
+            info.pointsWrong;
     }
 
-    player.score = Math.max(0, player.score + pointsChange);
+    player.score =
+        Math.max(
+            0,
+            player.score + pointsChange
+        );
 
     DOM.challengeResult.className =
-        `challenge-result ${correct ? "correct" : "incorrect"}`;
+        `challenge-result ${
+            correct
+                ? "correct"
+                : "incorrect"
+        }`;
 
-    DOM.resultIcon.textContent = correct ? "✓" : "✕";
-    DOM.resultTitle.textContent = correct ? "CORRECTO" : "INCORRECTO";
+    DOM.resultIcon.textContent =
+        correct ? "✓" : "✕";
+
+    DOM.resultTitle.textContent =
+        correct
+            ? "CORRECTO"
+            : "INCORRECTO";
 
     DOM.resultAnswer.textContent =
         `Respuesta correcta: ${currentQuestion.answer}`;
@@ -1644,13 +2023,31 @@ function checkAnswer() {
         currentQuestion.explanation;
 
     if (pointsChange > 0) {
+
         DOM.resultPoints.textContent =
-            `+${pointsChange} punto${pointsChange === 1 ? "" : "s"} algebraico${pointsChange === 1 ? "" : "s"}`;
+            `+${pointsChange} punto${
+                pointsChange === 1
+                    ? ""
+                    : "s"
+            } algebraico${
+                pointsChange === 1
+                    ? ""
+                    : "s"
+            }`;
+
     } else if (pointsChange < 0) {
+
         DOM.resultPoints.textContent =
-            `${pointsChange} punto${Math.abs(pointsChange) === 1 ? "" : "s"}. La puntuación no puede bajar de 0.`;
+            `${pointsChange} punto${
+                Math.abs(pointsChange) === 1
+                    ? ""
+                    : "s"
+            }. La puntuación no puede bajar de 0.`;
+
     } else {
-        DOM.resultPoints.textContent = "Sin cambio de puntuación.";
+
+        DOM.resultPoints.textContent =
+            "Sin cambio de puntuación.";
     }
 
     updateGameUI();
@@ -1661,15 +2058,51 @@ function checkAnswer() {
    ========================================================= */
 
 function continueAfterChallenge() {
-    const player = players[currentPlayerIndex];
-    const info = TYPE_INFO[currentCellType];
+
+    /*
+       No debe poder continuar antes de comprobar.
+    */
+
+    if (DOM.btnContinue.disabled) {
+        return;
+    }
+
+    /*
+       Bloqueamos inmediatamente el botón
+       para evitar doble clic.
+    */
+
+    DOM.btnContinue.disabled = true;
+
+    const player =
+        players[currentPlayerIndex];
+
+    const info =
+        TYPE_INFO[currentCellType];
+
+    /*
+       Bono de multiplicación:
+       si respondió correctamente,
+       avanza una casilla adicional.
+    */
 
     if (
         currentCellType === "multiplicacion" &&
         DOM.resultTitle.textContent === "CORRECTO" &&
         info.bonusMove
     ) {
-        player.position = Math.min(40, player.position + info.bonusMove);
+
+        player.position =
+            Math.min(
+                40,
+                player.position +
+                info.bonusMove
+            );
+
+        if (player.position === 40) {
+            player.reachedMeta = true;
+        }
+
         announce(
             `${player.name} recibe el bono de multiplicación y avanza una casilla.`
         );
@@ -1685,15 +2118,14 @@ function continueAfterChallenge() {
    ========================================================= */
 
 function cancelChallenge() {
-    announce("El reto no puede omitirse. Debes seleccionar una respuesta.");
 
-    if (currentQuestion) {
-        return;
-    }
+    announce(
+        "El reto no puede omitirse. Debes seleccionar una respuesta."
+    );
 }
 
 /* =========================================================
-   FIN DE TURNO Y RONDAS
+   FIN DE TURNO
    ========================================================= */
 
 function finishTurnWithoutChallenge() {
@@ -1701,110 +2133,219 @@ function finishTurnWithoutChallenge() {
 }
 
 function finishTurn() {
+
+    if (gameFinished) {
+        return;
+    }
+
+    /*
+       Evita finalizar dos veces el mismo turno.
+    */
+
+    if (!turnLocked) {
+        return;
+    }
+
     roundTurns++;
 
     /*
-       Cada jugador debe tener exactamente un turno por ronda.
-       Solo después de que todos hayan jugado se comprueba la victoria.
+       Primero comprobamos si alguien puede ganar.
+       Esto ocurre DESPUÉS de que todos hayan tenido
+       su turno en la ronda.
     */
 
     if (roundTurns >= players.length) {
-        const winnerCandidate = determineWinner();
+
+        const winnerCandidate =
+            determineWinner();
 
         if (winnerCandidate) {
+
             setTimeout(() => {
-                endGame(winnerCandidate);
+
+                endGame(
+                    winnerCandidate
+                );
+
             }, 700);
+
             return;
         }
 
+        /*
+           Nadie cumple todavía las condiciones
+           de victoria.
+        */
+
         round++;
+
         roundTurns = 0;
 
         currentPlayerIndex = 0;
+
+        turnLocked = false;
+
+        DOM.dice.textContent = "?";
+
+        DOM.diceMessage.textContent =
+            "Nueva ronda";
+
+        DOM.btnRoll.disabled = false;
 
         announce(
             `Ronda ${round}. Todos vuelven a tener un turno.`
         );
 
-        DOM.dice.textContent = "?";
-        DOM.diceMessage.textContent = "Nueva ronda";
-        DOM.btnRoll.disabled = false;
-
         updateGameUI();
+
         return;
     }
 
+    /*
+       Pasa al siguiente jugador.
+    */
+
     currentPlayerIndex =
-        (currentPlayerIndex + 1) % players.length;
+        (currentPlayerIndex + 1) %
+        players.length;
+
+    turnLocked = false;
 
     DOM.dice.textContent = "?";
-    DOM.diceMessage.textContent = "Pulsa para lanzar";
+
+    DOM.diceMessage.textContent =
+        "Pulsa para lanzar";
+
     DOM.btnRoll.disabled = false;
 
     updateGameUI();
+
+    announce(
+        `Turno de ${players[currentPlayerIndex].name}.`
+    );
 }
 
 /* =========================================================
-   VICTORIA
+   DETERMINAR GANADOR
    ========================================================= */
 
 function determineWinner() {
-    const someoneReachedMeta =
-        players.some(player => player.position === 40);
 
-    if (!someoneReachedMeta) {
+    /*
+       REGLA DE VICTORIA:
+
+       1. El jugador debe estar en META.
+       2. Debe tener al menos 5 puntos algebraicos.
+
+       Llegar a META con menos de 5 puntos
+       NO permite ganar.
+    */
+
+    const eligiblePlayers =
+        players.filter(player =>
+            player.position === 40 &&
+            player.score >= 5
+        );
+
+    /*
+       Nadie cumple las condiciones.
+    */
+
+    if (!eligiblePlayers.length) {
+
+        /*
+           Si alguien llegó a META pero no tiene
+           los 5 puntos necesarios, avisamos.
+        */
+
+        const atMetaWithoutEnoughPoints =
+            players.find(player =>
+                player.position === 40 &&
+                player.score < 5
+            );
+
+        if (atMetaWithoutEnoughPoints) {
+
+            announce(
+                `${atMetaWithoutEnoughPoints.name} llegó a META, pero necesita al menos 5 puntos algebraicos para ganar.`
+            );
+        }
+
         return null;
     }
 
     /*
-       La puntuación tiene prioridad.
-       En caso de empate, se utiliza la posición.
-       Si también empatan en posición, gana quien esté
-       primero en el orden de jugadores.
+       Si hay varios jugadores elegibles,
+       gana quien tenga más puntos.
     */
 
-    const ranking = [...players].sort((a, b) => {
-        if (b.score !== a.score) {
-            return b.score - a.score;
-        }
+    const ranking =
+        [...eligiblePlayers].sort(
+            (a, b) => {
 
-        if (b.position !== a.position) {
-            return b.position - a.position;
-        }
+                if (b.score !== a.score) {
+                    return b.score - a.score;
+                }
 
-        return a.id - b.id;
-    });
+                /*
+                   Si empatan en puntos,
+                   gana quien llegó primero.
+                   Como ambos están en META, usamos
+                   el orden de jugador como desempate.
+                */
+
+                return a.id - b.id;
+            }
+        );
 
     return ranking[0];
 }
 
-function endGame(winner) {
-    gameFinished = true;
+/* =========================================================
+   FINAL DE PARTIDA
+   ========================================================= */
 
-    DOM.winnerName.textContent = winner.name;
-    DOM.winnerScore.textContent = winner.score;
+function endGame(winner) {
+
+    gameFinished = true;
+    turnLocked = true;
+
+    DOM.btnRoll.disabled = true;
+    DOM.btnContinue.disabled = true;
+
+    DOM.winnerName.textContent =
+        winner.name;
+
+    DOM.winnerScore.textContent =
+        winner.score;
+
     DOM.winnerPosition.textContent =
         winner.position === 40
             ? "META"
             : `CASILLA ${winner.position}`;
 
-    DOM.finalRounds.textContent = round;
-    DOM.winnerColor.style.backgroundColor = winner.color;
+    DOM.finalRounds.textContent =
+        round;
 
-    const tiedScorePlayers = players.filter(
-        player => player.score === winner.score
-    );
+    DOM.winnerColor.style.backgroundColor =
+        winner.color;
+
+    const tiedScorePlayers =
+        players.filter(
+            player =>
+                player.score === winner.score &&
+                player.position === 40
+        );
 
     if (tiedScorePlayers.length > 1) {
+
         DOM.finishMessage.textContent =
-            `Hubo empate en puntuación. ${winner.name} gana por haber llegado más lejos en el tablero.`;
-    } else if (winner.position === 40) {
-        DOM.finishMessage.textContent =
-            `${winner.name} llegó a META y además obtuvo la mayor puntuación algebraica. ¡Una combinación de conocimiento y estrategia!`;
+            `${winner.name} gana el desempate por orden de llegada.`;
+
     } else {
+
         DOM.finishMessage.textContent =
-            `${winner.name} obtuvo la mayor puntuación algebraica. ¡El conocimiento matemático fue decisivo!`;
+            `${winner.name} llegó a META con ${winner.score} puntos algebraicos y cumple las condiciones de victoria. ¡Excelente trabajo!`;
     }
 
     showScreen("finish");
@@ -1815,85 +2356,157 @@ function endGame(winner) {
    ========================================================= */
 
 const wildcardActions = [
+
     {
         text: "¡Avanza dos casillas!",
-        execute(player) {
-            player.position = Math.min(40, player.position + 2);
-        }
-    },
-    {
-        text: "¡Retrocede una casilla!",
-        execute(player) {
-            player.position = Math.max(0, player.position - 1);
-        }
-    },
-    {
-        text: "¡Ganas dos puntos algebraicos!",
-        execute(player) {
-            player.score += 2;
-        }
-    },
-    {
-        text: "¡Pierdes un punto algebraico!",
-        execute(player) {
-            player.score = Math.max(0, player.score - 1);
-        }
-    },
-    {
-        text: "¡Intercambias posición con el jugador que esté inmediatamente por delante!",
-        execute(player) {
-            const ahead = players
-                .filter(other =>
-                    other.id !== player.id &&
-                    other.position > player.position
-                )
-                .sort((a, b) => a.position - b.position)[0];
 
-            if (ahead) {
-                const temporary = player.position;
-                player.position = ahead.position;
-                ahead.position = temporary;
+        execute(player) {
+
+            player.position =
+                Math.min(
+                    40,
+                    player.position + 2
+                );
+
+            if (player.position === 40) {
+                player.reachedMeta = true;
             }
         }
     },
+
+    {
+        text: "¡Retrocede una casilla!",
+
+        execute(player) {
+
+            player.position =
+                Math.max(
+                    0,
+                    player.position - 1
+                );
+        }
+    },
+
+    {
+        text: "¡Ganas dos puntos algebraicos!",
+
+        execute(player) {
+
+            player.score += 2;
+        }
+    },
+
+    {
+        text: "¡Pierdes un punto algebraico!",
+
+        execute(player) {
+
+            player.score =
+                Math.max(
+                    0,
+                    player.score - 1
+                );
+        }
+    },
+
+    {
+        text: "¡Intercambias posición con el jugador que esté inmediatamente por delante!",
+
+        execute(player) {
+
+            const ahead =
+                players
+                    .filter(other =>
+                        other.id !== player.id &&
+                        other.position >
+                            player.position
+                    )
+                    .sort(
+                        (a, b) =>
+                            a.position -
+                            b.position
+                    )[0];
+
+            if (ahead) {
+
+                const temporary =
+                    player.position;
+
+                player.position =
+                    ahead.position;
+
+                ahead.position =
+                    temporary;
+            }
+        }
+    },
+
     {
         text: "¡Repite el turno!",
+
         execute(player) {
+
             pendingAction = "repeat";
         }
     }
 ];
 
 function executeWildcard() {
-    const player = players[currentPlayerIndex];
+
+    const player =
+        players[currentPlayerIndex];
 
     const action =
         wildcardActions[
-            Math.floor(Math.random() * wildcardActions.length)
+            Math.floor(
+                Math.random() *
+                wildcardActions.length
+            )
         ];
 
     pendingAction = null;
+
     action.execute(player);
 
-    DOM.wildcardText.textContent = action.text;
-    DOM.wildcardModal.classList.remove("hidden");
+    DOM.wildcardText.textContent =
+        action.text;
+
+    DOM.wildcardModal.classList.remove(
+        "hidden"
+    );
 
     updateGameUI();
 }
 
 function finishWildcard() {
-    DOM.wildcardModal.classList.add("hidden");
 
-    const player = players[currentPlayerIndex];
+    DOM.wildcardModal.classList.add(
+        "hidden"
+    );
 
     if (pendingAction === "repeat") {
+
         pendingAction = null;
 
+        /*
+           El jugador conserva su turno.
+        */
+
+        turnLocked = false;
+
         DOM.dice.textContent = "?";
-        DOM.diceMessage.textContent = "¡Repite tu turno!";
+
+        DOM.diceMessage.textContent =
+            "¡Repite tu turno!";
+
         DOM.btnRoll.disabled = false;
 
         updateGameUI();
+
+        announce(
+            `${players[currentPlayerIndex].name} repite su turno.`
+        );
+
         return;
     }
 
@@ -1907,40 +2520,71 @@ function finishWildcard() {
 let toastTimer = null;
 
 function announce(message) {
+
     clearTimeout(toastTimer);
 
-    DOM.toast.textContent = message;
-    DOM.toast.classList.add("show");
+    DOM.toast.textContent =
+        message;
 
-    toastTimer = setTimeout(() => {
-        DOM.toast.classList.remove("show");
-    }, 2600);
+    DOM.toast.classList.add(
+        "show"
+    );
+
+    toastTimer =
+        setTimeout(() => {
+
+            DOM.toast.classList.remove(
+                "show"
+            );
+
+        }, 2600);
 }
 
+/* =========================================================
+   REINICIAR
+   ========================================================= */
+
 function resetGame() {
+
     players = [];
+
     currentPlayerIndex = 0;
+
     round = 1;
+
     selectedAnswer = null;
     currentQuestion = null;
     currentCellType = null;
     pendingAction = null;
+
     lastQuestionIndex = -1;
+
     roundTurns = 0;
+
     gameFinished = false;
+    turnLocked = false;
 
     DOM.dice.textContent = "?";
-    DOM.diceMessage.textContent = "Pulsa para lanzar";
+
+    DOM.diceMessage.textContent =
+        "Pulsa para lanzar";
+
     DOM.btnRoll.disabled = false;
 
-    DOM.wildcardModal.classList.add("hidden");
+    DOM.btnCheck.disabled = false;
+    DOM.btnContinue.disabled = true;
+
+    DOM.wildcardModal.classList.add(
+        "hidden"
+    );
 }
 
 /* =========================================================
-   VERIFICACIÓN INTERNA DEL BANCO
+   VALIDACIÓN DEL BANCO
    ========================================================= */
 
 function validateQuestionBank() {
+
     const requiredFields = [
         "category",
         "difficulty",
@@ -1953,69 +2597,116 @@ function validateQuestionBank() {
 
     let valid = true;
 
-    questionBank.forEach((question, index) => {
-        requiredFields.forEach(field => {
+    questionBank.forEach(
+        (question, index) => {
+
+            requiredFields.forEach(
+                field => {
+
+                    if (
+                        question[field] ===
+                            undefined ||
+                        question[field] ===
+                            null
+                    ) {
+
+                        console.error(
+                            `Pregunta ${
+                                index + 1
+                            }: falta el campo ${field}.`
+                        );
+
+                        valid = false;
+                    }
+                }
+            );
+
             if (
-                question[field] === undefined ||
-                question[field] === null
+                !Array.isArray(
+                    question.options
+                ) ||
+                question.options.length < 2
             ) {
+
                 console.error(
-                    `Pregunta ${index + 1}: falta el campo ${field}.`
+                    `Pregunta ${
+                        index + 1
+                    }: opciones inválidas.`
                 );
+
                 valid = false;
             }
-        });
 
-        if (!Array.isArray(question.options) ||
-            question.options.length < 2) {
-            console.error(
-                `Pregunta ${index + 1}: opciones inválidas.`
-            );
-            valid = false;
-        }
+            if (
+                !question.options.includes(
+                    question.answer
+                )
+            ) {
 
-        if (!question.options.includes(question.answer)) {
-            console.error(
-                `Pregunta ${index + 1}: la respuesta correcta no aparece entre las opciones.`
-            );
-            valid = false;
+                console.error(
+                    `Pregunta ${
+                        index + 1
+                    }: la respuesta correcta no aparece entre las opciones.`
+                );
+
+                valid = false;
+            }
         }
-    });
+    );
 
     if (questionBank.length < 60) {
+
         console.error(
-            `El banco contiene ${questionBank.length} preguntas. Se requieren al menos 60.`
+            `El banco contiene ${
+                questionBank.length
+            } preguntas. Se requieren al menos 60.`
         );
+
         valid = false;
+    }
+
+    if (valid) {
+        console.log(
+            `✓ Banco de preguntas validado: ${questionBank.length} preguntas.`
+        );
     }
 
     return valid;
 }
 
-/*
-   Ejecutamos la validación sin bloquear el juego.
-   Esto permite detectar errores del banco desde la consola
-   del navegador durante futuras modificaciones.
-*/
 validateQuestionBank();
 
 /* =========================================================
-   VERIFICACIÓN DEL TABLERO
+   VALIDACIÓN DEL TABLERO
    ========================================================= */
 
 function validateBoard() {
+
     if (boardPositions.length !== 41) {
+
         console.error(
             `El tablero debe tener 41 posiciones incluyendo SALIDA y META. Tiene ${boardPositions.length}.`
         );
     }
 
-    if (boardPositions[0].type !== "start") {
-        console.error("La posición 0 debe ser SALIDA.");
+    if (
+        boardPositions[0].type !==
+        "start"
+    ) {
+
+        console.error(
+            "La posición 0 debe ser SALIDA."
+        );
     }
 
-    if (boardPositions[40].type !== "meta") {
-        console.error("La posición 40 debe ser META.");
+    if (
+        boardPositions[40].type !==
+        "meta"
+    ) {
+
+        console.error(
+            "La posición 40 debe ser META."
+        );
     }
 }
 
