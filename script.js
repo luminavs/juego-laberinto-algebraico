@@ -1147,10 +1147,10 @@ function bindEvents() {
         checkAnswer
     );
 
-    DOM.btnContinue.addEventListener(
-        "click",
-        continueAfterChallenge
-    );
+    DOM.btnContinue.addEventListener("click", (event) => {
+    event.preventDefault();
+    continueAfterChallenge(event);
+});
 
     DOM.btnCancelChallenge.addEventListener(
         "click",
@@ -2057,13 +2057,15 @@ function checkAnswer() {
    CONTINUAR DESPUÉS DEL RETO
    ========================================================= */
 
-function continueAfterChallenge() {
+function continueAfterChallenge(event) {
+    if (event) {
+        event.preventDefault();
+    }
+
+    console.log("CONTINUAR FUE PRESIONADO");
+
     const player = players[currentPlayerIndex];
     const info = TYPE_INFO[currentCellType];
-
-    /* =========================================
-       BONO DE MULTIPLICACIÓN
-       ========================================= */
 
     if (
         currentCellType === "multiplicacion" &&
@@ -2080,20 +2082,23 @@ function continueAfterChallenge() {
         );
     }
 
-    /* =========================================
-       VOLVER A LA PANTALLA DEL TABLERO
-       ========================================= */
-
-    showScreen("game");
-
-    /* Actualizamos tablero y marcador */
     updateGameUI();
 
-    /* =========================================
-       TERMINAR EL TURNO
-       ========================================= */
-
     finishTurn();
+
+    /*
+       IMPORTANTE:
+       Después de terminar el turno,
+       regresamos al tablero.
+    */
+    showScreen("game");
+
+    updateGameUI();
+
+    DOM.dice.textContent = "?";
+    DOM.diceMessage.textContent = "Pulsa para lanzar";
+
+    DOM.btnRoll.disabled = false;
 }
 
 /* =========================================================
