@@ -179,6 +179,36 @@ button {
     right: 35px;
 }
 
+.start-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.rules-card {
+    max-width: 700px;
+    max-height: 80vh;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.rules-card h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.rules-card h3 {
+    margin-top: 20px;
+}
+
+.rules-card ul {
+    padding-left: 25px;
+}
+
+.rules-card li {
+    margin-bottom: 8px;
+}
+
 /* ==================== BOTONES ==================== */
 
 .primary-btn,
