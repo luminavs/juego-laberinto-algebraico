@@ -2058,57 +2058,40 @@ function checkAnswer() {
    ========================================================= */
 
 function continueAfterChallenge() {
+    const player = players[currentPlayerIndex];
+    const info = TYPE_INFO[currentCellType];
 
-    /*
-       No debe poder continuar antes de comprobar.
-    */
-
-    if (DOM.btnContinue.disabled) {
-        return;
-    }
-
-    /*
-       Bloqueamos inmediatamente el botón
-       para evitar doble clic.
-    */
-
-    DOM.btnContinue.disabled = true;
-
-    const player =
-        players[currentPlayerIndex];
-
-    const info =
-        TYPE_INFO[currentCellType];
-
-    /*
-       Bono de multiplicación:
-       si respondió correctamente,
-       avanza una casilla adicional.
-    */
+    /* =========================================
+       BONO DE MULTIPLICACIÓN
+       ========================================= */
 
     if (
         currentCellType === "multiplicacion" &&
         DOM.resultTitle.textContent === "CORRECTO" &&
         info.bonusMove
     ) {
-
-        player.position =
-            Math.min(
-                40,
-                player.position +
-                info.bonusMove
-            );
-
-        if (player.position === 40) {
-            player.reachedMeta = true;
-        }
+        player.position = Math.min(
+            40,
+            player.position + info.bonusMove
+        );
 
         announce(
             `${player.name} recibe el bono de multiplicación y avanza una casilla.`
         );
     }
 
+    /* =========================================
+       VOLVER A LA PANTALLA DEL TABLERO
+       ========================================= */
+
+    showScreen("game");
+
+    /* Actualizamos tablero y marcador */
     updateGameUI();
+
+    /* =========================================
+       TERMINAR EL TURNO
+       ========================================= */
 
     finishTurn();
 }
