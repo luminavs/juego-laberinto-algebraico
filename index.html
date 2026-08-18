@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Laberinto Algebraico: el desafío de las expresiones">
+    <title>Laberinto Algebraico | El desafío de las expresiones</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="app">
+
+        <!-- ==================== INICIO ==================== -->
+        <section id="screen-start" class="screen active">
+            <div class="start-card">
+                <div class="math-decoration decoration-1">x²</div>
+                <div class="math-decoration decoration-2">+</div>
+                <div class="math-decoration decoration-3">÷</div>
+                <div class="math-decoration decoration-4">Σ</div>
+
+                <div class="logo-symbol">∑</div>
+                <p class="eyebrow">JUEGO MATEMÁTICO EDUCATIVO</p>
+                <h1>Laberinto<br><span>Algebraico</span></h1>
+                <h2>El desafío de las expresiones</h2>
+
+                <p class="intro-text">
+                    Avanza por el laberinto, supera los retos algebraicos,
+                    acumula puntos y demuestra que puedes llegar más lejos
+                    gracias a tus conocimientos matemáticos.
+                </p>
+
+                <div class="start-rules">
+                    <div><strong>🎲</strong><span>Lanza el dado</span></div>
+                    <div><strong>🧠</strong><span>Resuelve el reto</span></div>
+                    <div><strong>🏆</strong><span>Acumula puntos</span></div>
+                </div>
+
+                <button id="btn-start" class="primary-btn">JUGAR</button>
+            </div>
+        </section>
+
+        <!-- ==================== CONFIGURACIÓN ==================== -->
+        <section id="screen-setup" class="screen">
+            <div class="setup-container">
+                <div class="section-heading">
+                    <span class="section-icon">⚙️</span>
+                    <div>
+                        <p class="eyebrow">PREPARA LA PARTIDA</p>
+                        <h2>Configuración</h2>
+                    </div>
+                </div>
+
+                <div class="player-count-card">
+                    <label for="player-count">¿Cuántos jugadores participarán?</label>
+                    <select id="player-count">
+                        <option value="4">4 jugadores</option>
+                        <option value="5">5 jugadores</option>
+                        <option value="6">6 jugadores</option>
+                    </select>
+                </div>
+
+                <div id="player-inputs" class="player-inputs"></div>
+
+                <div class="setup-actions">
+                    <button id="btn-back-start" class="secondary-btn">← VOLVER</button>
+                    <button id="btn-start-game" class="primary-btn">COMENZAR →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== JUEGO ==================== -->
+        <section id="screen-game" class="screen">
+
+            <header class="game-header">
+                <div class="game-brand">
+                    <span>∑</span>
+                    <div>
+                        <strong>Laberinto Algebraico</strong>
+                        <small>El desafío de las expresiones</small>
+                    </div>
+                </div>
+
+                <div class="game-status">
+                    <div class="status-box">
+                        <span>RONDA</span>
+                        <strong id="round-number">1</strong>
+                    </div>
+                    <div class="status-box current-player-status">
+                        <span>TURNO DE</span>
+                        <strong id="current-player-name">Jugador 1</strong>
+                    </div>
+                    <div class="status-box">
+                        <span>PUNTOS</span>
+                        <strong id="current-player-score">0</strong>
+                    </div>
+                </div>
+            </header>
+
+            <main class="game-main">
+
+                <section class="board-section">
+                    <div class="board-topbar">
+                        <div>
+                            <span class="board-title">EL LABERINTO</span>
+                            <span class="board-subtitle">Llega a META, pero los puntos deciden al ganador.</span>
+                        </div>
+                        <div class="progress-wrap">
+                            <span>PROGRESO</span>
+                            <div class="progress-bar">
+                                <div id="progress-fill"></div>
+                            </div>
+                            <strong id="progress-text">SALIDA</strong>
+                        </div>
+                    </div>
+
+                    <div id="board" class="board"></div>
+
+                    <div class="legend" id="legend">
+                        <div class="legend-title">LEYENDA</div>
+                        <div class="legend-item"><span class="legend-color identifica"></span>Identifica</div>
+                        <div class="legend-item"><span class="legend-color suma"></span>Suma</div>
+                        <div class="legend-item"><span class="legend-color resta"></span>Resta</div>
+                        <div class="legend-item"><span class="legend-color multiplicacion"></span>Multiplicación</div>
+                        <div class="legend-item"><span class="legend-color division"></span>División</div>
+                        <div class="legend-item"><span class="legend-color sustituye"></span>Sustituye y compara</div>
+                        <div class="legend-item"><span class="legend-color desafio"></span>Desafío</div>
+                        <div class="legend-item"><span class="legend-color comodin"></span>Comodín</div>
+                    </div>
+                </section>
+
+                <aside class="game-sidebar">
+
+                    <div class="turn-card">
+                        <div class="turn-label">TURNO ACTUAL</div>
+                        <div id="turn-player-color" class="turn-player-dot"></div>
+                        <h3 id="sidebar-player-name">Jugador 1</h3>
+                        <p id="sidebar-player-position">Salida</p>
+                    </div>
+
+                    <div class="dice-card">
+                        <div class="dice-title">DADO</div>
+                        <div id="dice" class="dice">?</div>
+                        <p id="dice-message">Pulsa para lanzar</p>
+                        <button id="btn-roll" class="primary-btn dice-btn">🎲 LANZAR DADO</button>
+                    </div>
+
+                    <div class="players-card">
+                        <div class="players-title">JUGADORES</div>
+                        <div id="scoreboard"></div>
+                    </div>
+
+                    <div class="objective-card">
+                        <strong>🏆 ¿Cómo se gana?</strong>
+                        <p>
+                            Llegar a META no termina inmediatamente la partida.
+                            Al completar la ronda se comparan los puntos.
+                            En caso de empate, gana quien esté más adelante.
+                        </p>
+                    </div>
+
+                </aside>
+            </main>
+        </section>
+
+        <!-- ==================== RETO ==================== -->
+        <section id="screen-challenge" class="screen">
+            <div class="challenge-container">
+
+                <div class="challenge-header">
+                    <button id="btn-cancel-challenge" class="icon-btn" title="Cancelar">←</button>
+                    <div class="challenge-meta">
+                        <span id="challenge-category" class="category-badge">IDENTIFICA</span>
+                        <span id="challenge-difficulty" class="difficulty-badge">FÁCIL</span>
+                    </div>
+                    <span id="challenge-points" class="challenge-points">+1</span>
+                </div>
+
+                <div class="challenge-card">
+                    <div class="challenge-number">RETO ALGEBRAICO</div>
+                    <h2 id="challenge-question">Pregunta</h2>
+
+                    <div id="answer-options" class="answer-options"></div>
+
+                    <button id="btn-check" class="primary-btn check-btn">COMPROBAR</button>
+
+                    <div id="challenge-result" class="challenge-result hidden">
+                        <div id="result-icon" class="result-icon">✓</div>
+                        <h3 id="result-title">CORRECTO</h3>
+                        <p id="result-answer"></p>
+                        <div class="explanation-box">
+                            <strong>💡 EXPLICACIÓN</strong>
+                            <p id="result-explanation"></p>
+                        </div>
+                        <div id="result-points" class="result-points"></div>
+                        <button id="btn-continue" class="primary-btn">CONTINUAR →</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== FINAL ==================== -->
+        <section id="screen-finish" class="screen">
+            <div class="finish-card">
+                <div class="trophy">🏆</div>
+                <p class="eyebrow">RESULTADO FINAL</p>
+                <h1>¡TENEMOS UN<br><span>GANADOR!</span></h1>
+
+                <div class="winner-medal">
+                    <div id="winner-color" class="winner-dot"></div>
+                    <div>
+                        <span>CAMPEÓN DEL LABERINTO</span>
+                        <strong id="winner-name">Jugador 1</strong>
+                    </div>
+                </div>
+
+                <div class="final-stats">
+                    <div>
+                        <span>PUNTUACIÓN</span>
+                        <strong id="winner-score">0</strong>
+                    </div>
+                    <div>
+                        <span>POSICIÓN</span>
+                        <strong id="winner-position">META</strong>
+                    </div>
+                    <div>
+                        <span>RONDA FINAL</span>
+                        <strong id="final-rounds">1</strong>
+                    </div>
+                </div>
+
+                <p id="finish-message" class="finish-message"></p>
+
+                <button id="btn-new-game" class="primary-btn">NUEVA PARTIDA</button>
+            </div>
+        </section>
+
+        <!-- ==================== MODAL COMODÍN ==================== -->
+        <div id="wildcard-modal" class="modal hidden">
+            <div class="modal-card">
+                <div class="modal-icon">🃏</div>
+                <p class="eyebrow">CASILLA ESPECIAL</p>
+                <h2>¡COMODÍN!</h2>
+                <p id="wildcard-text"></p>
+                <button id="btn-wildcard-continue" class="primary-btn">ACEPTAR</button>
+            </div>
+        </div>
+
+        <!-- ==================== NOTIFICACIÓN ==================== -->
+        <div id="toast" class="toast"></div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
